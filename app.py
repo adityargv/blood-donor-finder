@@ -58,7 +58,29 @@ def donors():
     rows = conn.execute("SELECT * FROM donors").fetchall()
     conn.close()
     return render_template("donors.html", donors=rows)
+@app.route("/search")
+def search():
+    blood_group = request.args.get("blood_group", "")
+    city = request.args.get("city", "").strip()
+    searched = "blood_group" in request.args
 
+    donors = []
+    if searched:
+        query = "SELECT * FROM donors WHERE 1=1"
+        params = []
+        if blood_group:
+            query += " AND blood_group = ?"
+            params.append(blood_group)
+        if city:
+            query += " AND LOWER(city) = LOWER(?)"
+            params.append(city)
+        conn = get_db()
+        donors = conn.execute(query, params).fetchall()
+        conn.close()
+
+    return render_template("search.html", donors=donors,
+                           city=city, searched=searched)
 if __name__ == "__main__":
     init_db()
     app.run(debug=True)
+    
