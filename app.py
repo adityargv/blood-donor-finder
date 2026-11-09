@@ -90,6 +90,52 @@ def search():
 
     return render_template("search.html", donors=donors, city=city,
                            searched=searched, only_eligible=only_eligible)
+@app.route("/admin")
+def admin():
+    conn = get_db()
+    rows = conn.execute("SELECT * FROM donors ORDER BY id").fetchall()
+    conn.close()
+    return render_template("admin.html", donors=rows)
+
+@app.route("/edit/<int:donor_id>", methods=["GET", "POST"])
+def edit(donor_id):
+    conn = get_db()
+    donor = conn.execute("SELECT * FROM donors WHERE id = ?", (donor_id,)).fetchone()
+    if donor is None:
+        conn.close()
+        return redirect(url_for("admin"))
+
+    if request.method == "POST":
+        name = request.form["name"].strip()
+        blood_group = request.form["blood_group"]
+        city = request.form["city"].strip()
+        phone = request.form["phone"].strip()
+        last_donated = request.form["last_donated_date"] or None
+
+        if not phone.isdigit() or len(phone) != 10:
+            conn.close()
+            return render_template("edit.html", donor=donor,
+                                   error="Phone number must be exactly 10 digits.")
+
+        conn.execute(
+            "UPDATE donors SET name=?, blood_group=?, city=?, phone=?, "
+            "last_donated_date=? WHERE id=?",
+            (name, blood_group, city, phone, last_donated, donor_id)
+        )
+        conn.commit()
+        conn.close()
+        return redirect(url_for("admin"))
+
+    conn.close()
+    return render_template("edit.html", donor=donor)
+
+@app.route("/delete/<int:donor_id>", methods=["POST"])
+def delete(donor_id):
+    conn = get_db()
+    conn.execute("DELETE FROM donors WHERE id = ?", (donor_id,))
+    conn.commit()
+    conn.close()
+    return redirect(url_for("admin"))
 if __name__ == "__main__":
     init_db()
     app.run(debug=True)
