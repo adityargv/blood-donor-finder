@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head><title>All Donors</title></head>
+<body>
+    <h1>All Donors</h1>
+    <table border="1" cellpadding="8">
+        <tr>
+            <th>Name</th><th>Blood Group</th><th>City</th>
+            <th>Phone</th><th>Last Donated</th>
+        </tr>
+        {% for d in donors %}
+        <tr>
+            <td>{{ d["name"] }}</td>
+            <td>{{ d["blood_group"] }}</td>
+            <td>{{ d["city"] }}</td>
+            <td>{{ d["phone"] }}</td>
+            <td>{{ d["last_donated_date"] or "Never" }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <br><a href="/">Back to Home</a>
+</body>
+</html>
