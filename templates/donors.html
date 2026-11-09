@@ -6,7 +6,7 @@
     <table border="1" cellpadding="8">
         <tr>
             <th>Name</th><th>Blood Group</th><th>City</th>
-            <th>Phone</th><th>Last Donated</th>
+            <th>Phone</th><th>Last Donated</th><th>Status</th>
         </tr>
         {% for d in donors %}
         <tr>
@@ -15,6 +15,7 @@
             <td>{{ d["city"] }}</td>
             <td>{{ d["phone"] }}</td>
             <td>{{ d["last_donated_date"] or "Never" }}</td>
+            <td>{{ "Eligible" if d["eligible"] else "Not eligible" }}</td>
         </tr>
         {% endfor %}
     </table>

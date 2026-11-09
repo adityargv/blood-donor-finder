@@ -1,3 +1,4 @@
+from datetime import date, datetime
 from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 
@@ -22,7 +23,11 @@ def init_db():
     """)
     conn.commit()
     conn.close()
-
+def is_eligible(last_donated):
+    if not last_donated:
+        return True
+    last = datetime.strptime(last_donated, "%Y-%m-%d").date()
+    return (date.today() - last).days >= 90
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -57,11 +62,13 @@ def donors():
     conn = get_db()
     rows = conn.execute("SELECT * FROM donors").fetchall()
     conn.close()
-    return render_template("donors.html", donors=rows)
+    donors_list = [dict(r, eligible=is_eligible(r["last_donated_date"])) for r in rows]
+    return render_template("donors.html", donors=donors_list)
 @app.route("/search")
 def search():
     blood_group = request.args.get("blood_group", "")
     city = request.args.get("city", "").strip()
+    only_eligible = request.args.get("only_eligible") == "on"
     searched = "blood_group" in request.args
 
     donors = []
@@ -75,11 +82,14 @@ def search():
             query += " AND LOWER(city) = LOWER(?)"
             params.append(city)
         conn = get_db()
-        donors = conn.execute(query, params).fetchall()
+        rows = conn.execute(query, params).fetchall()
         conn.close()
+        donors = [dict(r, eligible=is_eligible(r["last_donated_date"])) for r in rows]
+        if only_eligible:
+            donors = [d for d in donors if d["eligible"]]
 
-    return render_template("search.html", donors=donors,
-                           city=city, searched=searched)
+    return render_template("search.html", donors=donors, city=city,
+                           searched=searched, only_eligible=only_eligible)
 if __name__ == "__main__":
     init_db()
     app.run(debug=True)
