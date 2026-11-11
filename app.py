@@ -1,13 +1,20 @@
+from flask import Flask, render_template, request, redirect, url_for, session
 from datetime import date, datetime
-from flask import Flask, render_template, request, redirect, url_for
+from functools import wraps
 import sqlite3
 
 app = Flask(__name__)
+app.secret_key = "Blooddonorfinder"
+ADMIN_PASSWORD = "AdiVishu7466"
+
+
+# ---------- Database helpers ----------
 
 def get_db():
     conn = sqlite3.connect("database.db")
     conn.row_factory = sqlite3.Row
     return conn
+
 
 def init_db():
     conn = get_db()
@@ -23,14 +30,32 @@ def init_db():
     """)
     conn.commit()
     conn.close()
+
+
+# ---------- Other helpers ----------
+
 def is_eligible(last_donated):
     if not last_donated:
         return True
     last = datetime.strptime(last_donated, "%Y-%m-%d").date()
     return (date.today() - last).days >= 90
+
+
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not session.get("admin"):
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return wrapper
+
+
+# ---------- Public pages ----------
+
 @app.route("/")
 def home():
     return render_template("index.html")
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -57,6 +82,7 @@ def register():
 
     return render_template("register.html")
 
+
 @app.route("/donors")
 def donors():
     conn = get_db()
@@ -64,6 +90,8 @@ def donors():
     conn.close()
     donors_list = [dict(r, eligible=is_eligible(r["last_donated_date"])) for r in rows]
     return render_template("donors.html", donors=donors_list)
+
+
 @app.route("/search")
 def search():
     blood_group = request.args.get("blood_group", "")
@@ -90,14 +118,39 @@ def search():
 
     return render_template("search.html", donors=donors, city=city,
                            searched=searched, only_eligible=only_eligible)
+
+
+# ---------- Admin login ----------
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        if request.form["password"] == ADMIN_PASSWORD:
+            session["admin"] = True
+            return redirect(url_for("admin"))
+        return render_template("login.html", error="Wrong password.")
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    session.pop("admin", None)
+    return redirect(url_for("home"))
+
+
+# ---------- Admin panel (protected) ----------
+
 @app.route("/admin")
+@login_required
 def admin():
     conn = get_db()
     rows = conn.execute("SELECT * FROM donors ORDER BY id").fetchall()
     conn.close()
     return render_template("admin.html", donors=rows)
 
+
 @app.route("/edit/<int:donor_id>", methods=["GET", "POST"])
+@login_required
 def edit(donor_id):
     conn = get_db()
     donor = conn.execute("SELECT * FROM donors WHERE id = ?", (donor_id,)).fetchone()
@@ -129,13 +182,17 @@ def edit(donor_id):
     conn.close()
     return render_template("edit.html", donor=donor)
 
+
 @app.route("/delete/<int:donor_id>", methods=["POST"])
+@login_required
 def delete(donor_id):
     conn = get_db()
     conn.execute("DELETE FROM donors WHERE id = ?", (donor_id,))
     conn.commit()
     conn.close()
     return redirect(url_for("admin"))
+
+
 if __name__ == "__main__":
     init_db()
     app.run(debug=True)
