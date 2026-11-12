@@ -1,12 +1,14 @@
-<!DOCTYPE html>
-<html>
-<head><title>Blood Donor Finder</title></head>
-<body>
+{% extends "base.html" %}
+{% block title %}Home | Blood Donor Finder{% endblock %}
+{% block content %}
+<div class="hero">
     <h1>Blood Donor Finder</h1>
     <p>Find blood donors quickly in an emergency.</p>
-    <a href="/register">Register as a Donor</a><br>
-    <a href="/donors">View All Donors</a>
-    <br><a href="/search">Search Donors</a>
-    <br><a href="/admin">Admin Panel</a>
-</body>
-</html>
+</div>
+<div class="grid">
+    <a class="tile" href="/register"><span class="emoji">📝</span>Register as a Donor</a>
+    <a class="tile" href="/donors"><span class="emoji">📋</span>View All Donors</a>
+    <a class="tile" href="/search"><span class="emoji">🔍</span>Search Donors</a>
+    <a class="tile" href="/admin"><span class="emoji">🔒</span>Admin Panel</a>
+</div>
+{% endblock %}

@@ -1,16 +1,13 @@
-<!DOCTYPE html>
-<html>
-<head><title>Admin Login</title></head>
-<body>
+{% extends "base.html" %}
+{% block title %}Admin Login | Blood Donor Finder{% endblock %}
+{% block content %}
+<div class="card narrow">
     <h1>Admin Login</h1>
-    {% if error %}
-        <p style="color:red;">{{ error }}</p>
-    {% endif %}
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
     <form method="POST">
-        <label>Password:</label><br>
-        <input type="password" name="password" required><br><br>
+        <label>Password</label>
+        <input type="password" name="password" required>
         <button type="submit">Login</button>
     </form>
-    <br><a href="/">Back to Home</a>
-</body>
-</html>
+</div>
+{% endblock %}

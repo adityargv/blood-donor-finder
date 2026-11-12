@@ -1,33 +1,31 @@
-<!DOCTYPE html>
-<html>
-<head><title>Edit Donor</title></head>
-<body>
+{% extends "base.html" %}
+{% block title %}Edit Donor | Blood Donor Finder{% endblock %}
+{% block content %}
+<div class="card narrow">
     <h1>Edit Donor</h1>
-    {% if error %}
-        <p style="color:red;">{{ error }}</p>
-    {% endif %}
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
     <form method="POST">
-        <label>Name:</label><br>
-        <input type="text" name="name" value="{{ donor['name'] }}" required><br><br>
+        <label>Name</label>
+        <input type="text" name="name" value="{{ donor['name'] }}" required>
 
-        <label>Blood Group:</label><br>
+        <label>Blood Group</label>
         <select name="blood_group" required>
             {% for bg in ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] %}
             <option {% if donor["blood_group"] == bg %}selected{% endif %}>{{ bg }}</option>
             {% endfor %}
-        </select><br><br>
+        </select>
 
-        <label>City:</label><br>
-        <input type="text" name="city" value="{{ donor['city'] }}" required><br><br>
+        <label>City</label>
+        <input type="text" name="city" value="{{ donor['city'] }}" required>
 
-        <label>Phone (10 digits):</label><br>
-        <input type="text" name="phone" value="{{ donor['phone'] }}" required><br><br>
+        <label>Phone (10 digits)</label>
+        <input type="text" name="phone" value="{{ donor['phone'] }}" required>
 
-        <label>Last Donated Date:</label><br>
-        <input type="date" name="last_donated_date" value="{{ donor['last_donated_date'] or '' }}"><br><br>
+        <label>Last Donated Date</label>
+        <input type="date" name="last_donated_date" value="{{ donor['last_donated_date'] or '' }}">
 
         <button type="submit">Save Changes</button>
+        <a class="btn btn-grey" href="/admin">Cancel</a>
     </form>
-    <br><a href="/admin">Back to Admin</a>
-</body>
-</html>
+</div>
+{% endblock %}

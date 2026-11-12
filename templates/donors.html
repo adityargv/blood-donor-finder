@@ -1,9 +1,10 @@
-<!DOCTYPE html>
-<html>
-<head><title>All Donors</title></head>
-<body>
+{% extends "base.html" %}
+{% block title %}All Donors | Blood Donor Finder{% endblock %}
+{% block content %}
+<div class="card">
     <h1>All Donors</h1>
-    <table border="1" cellpadding="8">
+    <div class="table-wrap">
+    <table>
         <tr>
             <th>Name</th><th>Blood Group</th><th>City</th>
             <th>Phone</th><th>Last Donated</th><th>Status</th>
@@ -15,10 +16,13 @@
             <td>{{ d["city"] }}</td>
             <td>{{ d["phone"] }}</td>
             <td>{{ d["last_donated_date"] or "Never" }}</td>
-            <td>{{ "Eligible" if d["eligible"] else "Not eligible" }}</td>
+            <td>
+                {% if d["eligible"] %}<span class="badge ok">Eligible</span>
+                {% else %}<span class="badge no">Not eligible</span>{% endif %}
+            </td>
         </tr>
         {% endfor %}
     </table>
-    <br><a href="/">Back to Home</a>
-</body>
-</html>
+    </div>
+</div>
+{% endblock %}

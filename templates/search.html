@@ -1,31 +1,34 @@
- <!DOCTYPE html>
-<html>
-<head><title>Search Donors</title></head>
-<body>
+ {% extends "base.html" %}
+{% block title %}Search | Blood Donor Finder{% endblock %}
+{% block content %}
+<div class="card">
     <h1>Search Blood Donors</h1>
     <form method="GET">
-        <label>Blood Group:</label><br>
+        <label>Blood Group</label>
         <select name="blood_group">
             <option value="">Any</option>
             <option>A+</option><option>A-</option>
             <option>B+</option><option>B-</option>
             <option>AB+</option><option>AB-</option>
             <option>O+</option><option>O-</option>
-        </select><br><br>
+        </select>
 
-        <label>City:</label><br>
-        <input type="text" name="city" value="{{ city }}"><br><br>
-<label>
-    <input type="checkbox" name="only_eligible" {% if only_eligible %}checked{% endif %}>
-    Show only eligible donors
-</label><br><br>
+        <label>City</label>
+        <input type="text" name="city" value="{{ city }}">
+
+        <label class="checkbox">
+            <input type="checkbox" name="only_eligible" {% if only_eligible %}checked{% endif %}>
+            Show only eligible donors
+        </label>
+
         <button type="submit">Search</button>
     </form>
 
     {% if searched %}
         <h2>Results ({{ donors|length }})</h2>
         {% if donors %}
-        <table border="1" cellpadding="8">
+        <div class="table-wrap">
+        <table>
             <tr>
                 <th>Name</th><th>Blood Group</th><th>City</th>
                 <th>Phone</th><th>Last Donated</th><th>Status</th>
@@ -37,14 +40,17 @@
                 <td>{{ d["city"] }}</td>
                 <td>{{ d["phone"] }}</td>
                 <td>{{ d["last_donated_date"] or "Never" }}</td>
-                <td>{{ "Eligible" if d["eligible"] else "Not eligible" }}</td>
+                <td>
+                    {% if d["eligible"] %}<span class="badge ok">Eligible</span>
+                    {% else %}<span class="badge no">Not eligible</span>{% endif %}
+                </td>
             </tr>
             {% endfor %}
         </table>
+        </div>
         {% else %}
-            <p>No donors found.</p>
+            <p class="empty">No donors found.</p>
         {% endif %}
     {% endif %}
-    <br><a href="/">Back to Home</a>
-</body>
-</html>
+</div>
+{% endblock %}

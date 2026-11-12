@@ -1,34 +1,31 @@
-<!DOCTYPE html>
-<html>
-<head><title>Register Donor</title></head>
-<body>
+{% extends "base.html" %}
+{% block title %}Register | Blood Donor Finder{% endblock %}
+{% block content %}
+<div class="card narrow">
     <h1>Register as a Blood Donor</h1>
-    {% if error %}
-        <p style="color:red;">{{ error }}</p>
-    {% endif %}
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
     <form method="POST">
-        <label>Name:</label><br>
-        <input type="text" name="name" required><br><br>
+        <label>Name</label>
+        <input type="text" name="name" required>
 
-        <label>Blood Group:</label><br>
+        <label>Blood Group</label>
         <select name="blood_group" required>
             <option>A+</option><option>A-</option>
             <option>B+</option><option>B-</option>
             <option>AB+</option><option>AB-</option>
             <option>O+</option><option>O-</option>
-        </select><br><br>
+        </select>
 
-        <label>City:</label><br>
-        <input type="text" name="city" required><br><br>
+        <label>City</label>
+        <input type="text" name="city" required>
 
-        <label>Phone (10 digits):</label><br>
-        <input type="text" name="phone" required><br><br>
+        <label>Phone (10 digits)</label>
+        <input type="text" name="phone" required>
 
-        <label>Last Donated Date (optional):</label><br>
-        <input type="date" name="last_donated_date"><br><br>
+        <label>Last Donated Date (optional)</label>
+        <input type="date" name="last_donated_date">
 
         <button type="submit">Register</button>
     </form>
-    <br><a href="/">Back to Home</a>
-</body>
-</html>
+</div>
+{% endblock %}

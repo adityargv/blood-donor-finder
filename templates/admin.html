@@ -1,9 +1,10 @@
-<!DOCTYPE html>
-<html>
-<head><title>Admin Panel</title></head>
-<body>
+{% extends "base.html" %}
+{% block title %}Admin Panel | Blood Donor Finder{% endblock %}
+{% block content %}
+<div class="card">
     <h1>Admin Panel</h1>
-    <table border="1" cellpadding="8">
+    <div class="table-wrap">
+    <table>
         <tr>
             <th>ID</th><th>Name</th><th>Blood Group</th><th>City</th>
             <th>Phone</th><th>Last Donated</th><th>Actions</th>
@@ -16,17 +17,17 @@
             <td>{{ d["city"] }}</td>
             <td>{{ d["phone"] }}</td>
             <td>{{ d["last_donated_date"] or "Never" }}</td>
-            <td>
-                <a href="/edit/{{ d['id'] }}">Edit</a>
-                <form method="POST" action="/delete/{{ d['id'] }}" style="display:inline;"
+            <td class="actions">
+                <a class="btn btn-small btn-grey" href="/edit/{{ d['id'] }}">Edit</a>
+                <form class="inline" method="POST" action="/delete/{{ d['id'] }}"
                       onsubmit="return confirm('Delete this donor?');">
-                    <button type="submit">Delete</button>
+                    <button class="btn-small" type="submit">Delete</button>
                 </form>
             </td>
         </tr>
         {% endfor %}
     </table>
-    <br><a href="/">Back to Home</a>
-    <br><a href="/logout">Logout</a>
-</body>
-</html>
+    </div>
+    <a class="btn btn-grey" href="/logout">Logout</a>
+</div>
+{% endblock %}

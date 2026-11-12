@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Blood Donor Finder{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav>
+        <a class="brand" href="/">🩸 Blood Donor Finder</a>
+        <a class="link" href="/">Home</a>
+        <a class="link" href="/register">Register</a>
+        <a class="link" href="/donors">Donors</a>
+        <a class="link" href="/search">Search</a>
+        <a class="link" href="/admin">Admin</a>
+    </nav>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
