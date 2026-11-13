@@ -104,3 +104,10 @@ tr:hover td { background: #fdf6f6; }
 .narrow { max-width: 480px; margin: 0 auto; }
 form.inline { display: inline; }
 .actions { display: flex; gap: 8px; align-items: center; }
+#picker { height: 280px; border-radius: 8px; border: 1px solid #d9c3c6; margin: 8px 0 4px; }
+#map { height: 520px; border-radius: 8px; border: 1px solid #d9c3c6; }
+.hint { color: var(--muted); font-size: 14px; margin: 6px 0; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.dot { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: middle; }
+.dot.ok { background: #1d8a3f; }
+.dot.no { background: #c0392b; }

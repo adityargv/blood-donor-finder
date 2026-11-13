@@ -1,31 +1,52 @@
 {% extends "base.html" %}
 {% block title %}Register | Blood Donor Finder{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
 {% block content %}
 <div class="card narrow">
     <h1>Register as a Blood Donor</h1>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
     <form method="POST">
         <label>Name</label>
-        <input type="text" name="name" required>
+        <input type="text" name="name" value="{{ f.get('name', '') }}" required>
 
         <label>Blood Group</label>
         <select name="blood_group" required>
-            <option>A+</option><option>A-</option>
-            <option>B+</option><option>B-</option>
-            <option>AB+</option><option>AB-</option>
-            <option>O+</option><option>O-</option>
+            {% for bg in ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] %}
+            <option {% if f.get("blood_group") == bg %}selected{% endif %}>{{ bg }}</option>
+            {% endfor %}
         </select>
 
         <label>City</label>
-        <input type="text" name="city" required>
+        <input type="text" name="city" value="{{ f.get('city', '') }}" required>
 
         <label>Phone (10 digits)</label>
-        <input type="text" name="phone" required>
+        <input type="text" name="phone" value="{{ f.get('phone', '') }}" required>
 
         <label>Last Donated Date (optional)</label>
-        <input type="date" name="last_donated_date">
+        <input type="date" name="last_donated_date" value="{{ f.get('last_donated_date', '') }}">
+
+        <label>Your Location (optional)</label>
+        <button type="button" id="gps-btn" class="btn btn-grey btn-small">📍 Use my location</button>
+        <p class="hint">Or click on the map to place your pin. You can drag the pin to adjust it.</p>
+        <div id="picker"></div>
+        <div class="row">
+            <div>
+                <label>Latitude</label>
+                <input type="text" id="latitude" name="latitude" value="{{ f.get('latitude', '') }}">
+            </div>
+            <div>
+                <label>Longitude</label>
+                <input type="text" id="longitude" name="longitude" value="{{ f.get('longitude', '') }}">
+            </div>
+        </div>
 
         <button type="submit">Register</button>
     </form>
 </div>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ url_for('static', filename='picker.js') }}"></script>
 {% endblock %}

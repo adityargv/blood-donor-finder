@@ -4,8 +4,8 @@ from functools import wraps
 import sqlite3
 
 app = Flask(__name__)
-app.secret_key = "Blooddonorfinder"
-ADMIN_PASSWORD = "AdiVishu7466"
+app.secret_key = "change-this-to-any-random-text"
+ADMIN_PASSWORD = "admin123"
 
 
 # ---------- Database helpers ----------
@@ -25,9 +25,17 @@ def init_db():
             blood_group TEXT NOT NULL,
             city TEXT NOT NULL,
             phone TEXT NOT NULL,
-            last_donated_date TEXT
+            last_donated_date TEXT,
+            latitude REAL,
+            longitude REAL
         )
     """)
+    # Older databases do not have the location columns yet, so add them.
+    columns = [row["name"] for row in conn.execute("PRAGMA table_info(donors)")]
+    if "latitude" not in columns:
+        conn.execute("ALTER TABLE donors ADD COLUMN latitude REAL")
+    if "longitude" not in columns:
+        conn.execute("ALTER TABLE donors ADD COLUMN longitude REAL")
     conn.commit()
     conn.close()
 
@@ -39,6 +47,23 @@ def is_eligible(last_donated):
         return True
     last = datetime.strptime(last_donated, "%Y-%m-%d").date()
     return (date.today() - last).days >= 90
+
+
+def parse_location(form):
+    """Returns (latitude, longitude, error). Both empty is allowed."""
+    lat_raw = form.get("latitude", "").strip()
+    lng_raw = form.get("longitude", "").strip()
+    if not lat_raw and not lng_raw:
+        return None, None, None
+    try:
+        lat = float(lat_raw)
+        lng = float(lng_raw)
+    except ValueError:
+        return None, None, "Latitude and longitude must be numbers (or both left empty)."
+    if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+        return None, None, "Location is out of range."
+    # Rounded to 3 decimals (about 100 m) to protect the donor's privacy.
+    return round(lat, 3), round(lng, 3), None
 
 
 def login_required(f):
@@ -65,22 +90,27 @@ def register():
         city = request.form["city"].strip()
         phone = request.form["phone"].strip()
         last_donated = request.form["last_donated_date"] or None
+        latitude, longitude, location_error = parse_location(request.form)
 
+        error = None
         if not phone.isdigit() or len(phone) != 10:
-            return render_template("register.html",
-                                   error="Phone number must be exactly 10 digits.")
+            error = "Phone number must be exactly 10 digits."
+        elif location_error:
+            error = location_error
+        if error:
+            return render_template("register.html", error=error, f=request.form)
 
         conn = get_db()
         conn.execute(
-            "INSERT INTO donors (name, blood_group, city, phone, last_donated_date) "
-            "VALUES (?, ?, ?, ?, ?)",
-            (name, blood_group, city, phone, last_donated)
+            "INSERT INTO donors (name, blood_group, city, phone, last_donated_date, "
+            "latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (name, blood_group, city, phone, last_donated, latitude, longitude)
         )
         conn.commit()
         conn.close()
         return redirect(url_for("donors"))
 
-    return render_template("register.html")
+    return render_template("register.html", f={})
 
 
 @app.route("/donors")
@@ -118,6 +148,17 @@ def search():
 
     return render_template("search.html", donors=donors, city=city,
                            searched=searched, only_eligible=only_eligible)
+
+
+@app.route("/map")
+def map_view():
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT * FROM donors WHERE latitude IS NOT NULL AND longitude IS NOT NULL"
+    ).fetchall()
+    conn.close()
+    donors_list = [dict(r, eligible=is_eligible(r["last_donated_date"])) for r in rows]
+    return render_template("map.html", donors=donors_list)
 
 
 # ---------- Admin login ----------
@@ -164,16 +205,21 @@ def edit(donor_id):
         city = request.form["city"].strip()
         phone = request.form["phone"].strip()
         last_donated = request.form["last_donated_date"] or None
+        latitude, longitude, location_error = parse_location(request.form)
 
+        error = None
         if not phone.isdigit() or len(phone) != 10:
+            error = "Phone number must be exactly 10 digits."
+        elif location_error:
+            error = location_error
+        if error:
             conn.close()
-            return render_template("edit.html", donor=donor,
-                                   error="Phone number must be exactly 10 digits.")
+            return render_template("edit.html", donor=donor, error=error)
 
         conn.execute(
             "UPDATE donors SET name=?, blood_group=?, city=?, phone=?, "
-            "last_donated_date=? WHERE id=?",
-            (name, blood_group, city, phone, last_donated, donor_id)
+            "last_donated_date=?, latitude=?, longitude=? WHERE id=?",
+            (name, blood_group, city, phone, last_donated, latitude, longitude, donor_id)
         )
         conn.commit()
         conn.close()
@@ -196,4 +242,3 @@ def delete(donor_id):
 if __name__ == "__main__":
     init_db()
     app.run(debug=True)
-    

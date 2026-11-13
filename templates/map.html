@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Donor Map | Blood Donor Finder{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+{% block content %}
+<div class="card">
+    <h1>Donor Map</h1>
+    <p class="hint">
+        <span class="dot ok"></span> Eligible &nbsp;
+        <span class="dot no"></span> Not eligible &nbsp;|&nbsp;
+        {{ donors|length }} donor(s) on the map. Click a pin for details.
+    </p>
+    <div id="map"></div>
+    {% if not donors %}
+    <p class="empty">No donor has a location yet. Add one from the Register page or the admin Edit page.</p>
+    {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    var donors = {{ donors|tojson }};
+    var map = L.map("map").setView([20.5937, 78.9629], 5);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "&copy; OpenStreetMap contributors"
+    }).addTo(map);
+
+    var points = [];
+    donors.forEach(function (d) {
+        var color = d.eligible ? "#1d8a3f" : "#c0392b";
+        var pin = L.circleMarker([d.latitude, d.longitude], {
+            radius: 10, color: "#ffffff", weight: 2, fillColor: color, fillOpacity: 0.95
+        }).addTo(map);
+
+        var box = document.createElement("div");
+        var title = document.createElement("strong");
+        title.textContent = d.name + " (" + d.blood_group + ")";
+        box.appendChild(title);
+        [d.city, "Phone: " + d.phone,
+         "Last donated: " + (d.last_donated_date || "Never"),
+         d.eligible ? "Eligible" : "Not eligible"].forEach(function (line) {
+            box.appendChild(document.createElement("br"));
+            box.appendChild(document.createTextNode(line));
+        });
+        pin.bindPopup(box);
+        points.push([d.latitude, d.longitude]);
+    });
+    if (points.length) {
+        map.fitBounds(points, { padding: [40, 40], maxZoom: 14 });
+    }
+</script>
+{% endblock %}

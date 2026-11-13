@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 {% block title %}Edit Donor | Blood Donor Finder{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
 {% block content %}
 <div class="card narrow">
     <h1>Edit Donor</h1>
@@ -24,8 +27,27 @@
         <label>Last Donated Date</label>
         <input type="date" name="last_donated_date" value="{{ donor['last_donated_date'] or '' }}">
 
+        <label>Location</label>
+        <button type="button" id="gps-btn" class="btn btn-grey btn-small">📍 Use my location</button>
+        <p class="hint">Click on the map to move the pin, or drag it.</p>
+        <div id="picker"></div>
+        <div class="row">
+            <div>
+                <label>Latitude</label>
+                <input type="text" id="latitude" name="latitude" value="{{ donor['latitude'] if donor['latitude'] is not none else '' }}">
+            </div>
+            <div>
+                <label>Longitude</label>
+                <input type="text" id="longitude" name="longitude" value="{{ donor['longitude'] if donor['longitude'] is not none else '' }}">
+            </div>
+        </div>
+
         <button type="submit">Save Changes</button>
         <a class="btn btn-grey" href="/admin">Cancel</a>
     </form>
 </div>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ url_for('static', filename='picker.js') }}"></script>
 {% endblock %}
