@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from datetime import date, datetime
 from functools import wraps
+from math import radians, sin, cos, asin, sqrt
 import sqlite3
 
 app = Flask(__name__)
@@ -66,6 +67,15 @@ def parse_location(form):
     return round(lat, 3), round(lng, 3), None
 
 
+def distance_km(lat1, lng1, lat2, lng2):
+    """Haversine formula: distance in km between two latitude/longitude points."""
+    earth_radius = 6371
+    d_lat = radians(lat2 - lat1)
+    d_lng = radians(lng2 - lng1)
+    a = sin(d_lat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(d_lng / 2) ** 2
+    return 2 * earth_radius * asin(sqrt(a))
+
+
 def login_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -127,9 +137,21 @@ def search():
     blood_group = request.args.get("blood_group", "")
     city = request.args.get("city", "").strip()
     only_eligible = request.args.get("only_eligible") == "on"
+    radius = request.args.get("radius", "")
     searched = "blood_group" in request.args
 
+    # The visitor's GPS position (sent by the "Find donors near me" button)
+    near = None
+    try:
+        user_lat = float(request.args.get("lat", ""))
+        user_lng = float(request.args.get("lng", ""))
+        if -90 <= user_lat <= 90 and -180 <= user_lng <= 180:
+            near = (user_lat, user_lng)
+    except ValueError:
+        pass
+
     donors = []
+    skipped = 0  # donors without a saved location, left out of a "near me" search
     if searched:
         query = "SELECT * FROM donors WHERE 1=1"
         params = []
@@ -146,8 +168,26 @@ def search():
         if only_eligible:
             donors = [d for d in donors if d["eligible"]]
 
+        if near:
+            with_distance = []
+            for d in donors:
+                if d["latitude"] is None or d["longitude"] is None:
+                    skipped += 1
+                    continue
+                d["distance"] = round(distance_km(near[0], near[1],
+                                                  d["latitude"], d["longitude"]), 1)
+                with_distance.append(d)
+            if radius:
+                try:
+                    with_distance = [d for d in with_distance if d["distance"] <= float(radius)]
+                except ValueError:
+                    pass
+            donors = sorted(with_distance, key=lambda d: d["distance"])
+
     return render_template("search.html", donors=donors, city=city,
-                           searched=searched, only_eligible=only_eligible)
+                           blood_group=blood_group, only_eligible=only_eligible,
+                           radius=radius, searched=searched,
+                           near=near is not None, skipped=skipped)
 
 
 @app.route("/map")

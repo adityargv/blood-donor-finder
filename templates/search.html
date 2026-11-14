@@ -3,14 +3,13 @@
 {% block content %}
 <div class="card">
     <h1>Search Blood Donors</h1>
-    <form method="GET">
+    <form method="GET" id="search-form">
         <label>Blood Group</label>
         <select name="blood_group">
             <option value="">Any</option>
-            <option>A+</option><option>A-</option>
-            <option>B+</option><option>B-</option>
-            <option>AB+</option><option>AB-</option>
-            <option>O+</option><option>O-</option>
+            {% for bg in ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] %}
+            <option {% if blood_group == bg %}selected{% endif %}>{{ bg }}</option>
+            {% endfor %}
         </select>
 
         <label>City</label>
@@ -21,17 +20,36 @@
             Show only eligible donors
         </label>
 
+        <label>Distance limit (used with "near me")</label>
+        <select name="radius">
+            <option value="">Any distance</option>
+            {% for km in [5, 10, 25, 50, 100] %}
+            <option value="{{ km }}" {% if radius == km|string %}selected{% endif %}>Within {{ km }} km</option>
+            {% endfor %}
+        </select>
+
+        <input type="hidden" name="lat" id="lat">
+        <input type="hidden" name="lng" id="lng">
+
         <button type="submit">Search</button>
+        <button type="button" id="near-btn" class="btn-grey">📍 Find donors near me</button>
     </form>
 
     {% if searched %}
         <h2>Results ({{ donors|length }})</h2>
+        {% if near %}
+            <p class="hint">Sorted by distance from your current location, nearest first.</p>
+            {% if skipped %}
+            <p class="hint">{{ skipped }} donor(s) without a saved location were left out.</p>
+            {% endif %}
+        {% endif %}
         {% if donors %}
         <div class="table-wrap">
         <table>
             <tr>
                 <th>Name</th><th>Blood Group</th><th>City</th>
                 <th>Phone</th><th>Last Donated</th><th>Status</th>
+                {% if near %}<th>Distance</th>{% endif %}
             </tr>
             {% for d in donors %}
             <tr>
@@ -44,6 +62,7 @@
                     {% if d["eligible"] %}<span class="badge ok">Eligible</span>
                     {% else %}<span class="badge no">Not eligible</span>{% endif %}
                 </td>
+                {% if near %}<td><strong>{{ d["distance"] }} km</strong></td>{% endif %}
             </tr>
             {% endfor %}
         </table>
@@ -53,4 +72,27 @@
         {% endif %}
     {% endif %}
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.getElementById("near-btn").addEventListener("click", function () {
+        var btn = this;
+        if (!navigator.geolocation) {
+            alert("Your browser does not support GPS location.");
+            return;
+        }
+        btn.textContent = "Getting your location...";
+        navigator.geolocation.getCurrentPosition(
+            function (pos) {
+                document.getElementById("lat").value = pos.coords.latitude;
+                document.getElementById("lng").value = pos.coords.longitude;
+                document.getElementById("search-form").submit();
+            },
+            function () {
+                btn.textContent = "📍 Find donors near me";
+                alert("Could not get your location. Allow location access and try again.");
+            }
+        );
+    });
+</script>
 {% endblock %}
